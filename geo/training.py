@@ -39,7 +39,7 @@ class LightningFcn(LightningModule):
         self.train_set, self.val_set = torch.utils.data.random_split(dataset, lengths)
 
     def forward(self, x):
-        return self.model(x)
+        return self.model(x)['out']
 
     def configure_optimizers(self):
         optim = torch.optim.Adam(self.model.parameters(), lr=self.hparams.learning_rate)
