@@ -50,7 +50,7 @@ class LightningFcn(LightningModule):
 
     def forward(self, x):
         logits = self.model(x)['out']
-        return nn.functional.sigmoid(logits.squeeze(1))
+        return torch.sigmoid(logits.squeeze(1))
 
     def configure_optimizers(self):
         optim = torch.optim.Adam(self.model.parameters(), lr=self.hparams.learning_rate)
@@ -128,7 +128,7 @@ class LightningFcn(LightningModule):
             sample_input = sample_input.cuda()
         # log sampled images
         sample_imgs = self(sample_input)
-        grid = torchvision.utils.make_grid(sample_imgs)
+        grid = torchvision.utils.make_grid(sample_imgs.unsqueeze(1))
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
