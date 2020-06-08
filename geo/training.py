@@ -40,6 +40,7 @@ class LightningFcn(LightningModule):
         n_train_data = int((1. - validation_pct) * n_data)
         lengths = [n_train_data, (n_data - n_train_data)]
         self.train_set, self.val_set = torch.utils.data.random_split(dataset, lengths)
+        self.loss_fn = nn.BCELoss()
 
     def forward(self, x):
         return self.model(x)['out']
@@ -50,7 +51,7 @@ class LightningFcn(LightningModule):
         return [optim], [scheduler]
 
     def loss(self, y_hat, y):
-        return nn.NLLLoss2d(y_hat, y)
+        return self.loss_fn(y_hat, y)
 
     def training_step(self, batch, batch_idx, *args, **kwargs):
         x, y = batch
