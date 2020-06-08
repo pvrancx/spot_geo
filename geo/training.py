@@ -21,7 +21,9 @@ class LightningFcn(LightningModule):
             validation_pct: float = 0.1
     ):
         super(LightningFcn, self).__init__()
-        self.hparams = Namespace(**locals())
+        args = locals().copy()
+        del args['self']
+        self.hparams = Namespace(**args)
         self.model = create_fcn_resnet()
 
         assert 0. <= validation_pct <= 1., 'invalid validation ratio'
