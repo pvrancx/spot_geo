@@ -63,7 +63,7 @@ class GeoSetFromFolder(VisionDataset):
         labels = self.labels[img_path] if self.dataset == 'train' else ()
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
         target = torch.zeros((img.height, img.width))
-        target[idx.chunk(2, 1)] = 1.
+        target[idx[:, 1], torch[:, 0]] = 1.
         if self.transform:
             img = self.transform(img)
         if self.target_transform:
