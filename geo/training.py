@@ -17,6 +17,7 @@ class LightningFcn(LightningModule):
             learning_rate: float = 1e-4,
             batch_size: int = 64,
             lr_decay: float = 0.999,
+            data_path: str = '.',
             validation_pct: float = 0.1
     ):
         super(LightningFcn, self).__init__()
