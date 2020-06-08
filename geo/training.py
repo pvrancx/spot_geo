@@ -18,7 +18,8 @@ class LightningFcn(LightningModule):
             batch_size: int = 64,
             lr_decay: float = 0.999,
             data_path: str = '.',
-            validation_pct: float = 0.1
+            validation_pct: float = 0.1,
+            num_workers: int = 4
     ):
         super(LightningFcn, self).__init__()
         self.hparams = Namespace(
@@ -26,7 +27,8 @@ class LightningFcn(LightningModule):
             batch_size=batch_size,
             lr_decay=lr_decay,
             data_path=data_path,
-            validation_pct=validation_pct
+            validation_pct=validation_pct,
+            num_workers=num_workers
         )
         self.model = create_fcn_resnet()
 
@@ -89,10 +91,18 @@ class LightningFcn(LightningModule):
                 'log': tensorboard_logs}
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.train_set,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.val_set,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers
+        )
 
     def test_dataloader(self):
         test_set = GeoSetFromFolder(
@@ -100,7 +110,11 @@ class LightningFcn(LightningModule):
             dataset='test',
             transform=transforms.ToTensor()
         )
-        return DataLoader(test_set, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            test_set,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers
+        )
 
     def on_epoch_end(self) -> None:
         sample_input, _ = next(iter(self.trainer.val_dataloaders[-1]))
