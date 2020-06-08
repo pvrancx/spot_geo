@@ -34,8 +34,7 @@ class LightningFcn(LightningModule):
         dataset = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='train',
-            transform=transforms.ToTensor(),
-            target_transform=transforms.Lambda(lambda x: torch.tensor(x))
+            transform=transforms.ToTensor()
         )
         n_data = len(dataset)
         n_train_data = int((1. - validation_pct) * n_data)
@@ -51,11 +50,6 @@ class LightningFcn(LightningModule):
         return [optim], [scheduler]
 
     def loss(self, y_hat, y):
-        idx = y.long()
-        mask = torch.zeros_like(y_hat)
-        mask.scatter_(2, idx, 1.)
-        if self.on_gpu:
-            mask.cuda()
         return nn.NLLLoss2d(y_hat, y)
 
     def training_step(self, batch, batch_idx, *args, **kwargs):
@@ -103,8 +97,7 @@ class LightningFcn(LightningModule):
         test_set = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='test',
-            transform=transforms.ToTensor(),
-            target_transform=transforms.Lambda(lambda x: torch.tensor(x))
+            transform=transforms.ToTensor()
         )
         return DataLoader(test_set, batch_size=self.hparams.batch_size)
 

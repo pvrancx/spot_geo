@@ -2,6 +2,7 @@ import json
 import os
 
 import numpy as np
+import torch
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
@@ -59,8 +60,10 @@ class GeoSetFromFolder(VisionDataset):
     def __getitem__(self, index):
         img_path = self.images[index]
         img = Image.open(img_path).convert('L')
-        target = self.labels[img_path] if self.dataset == 'train' else ()
-        target = np.array(target)
+        labels = self.labels[img_path] if self.dataset == 'train' else ()
+        idx = torch.from_numpy(np.atleast_2d(labels)).long()
+        target = torch.zeros((img.height, img.width))
+        target[idx.chunk(2, 1)] = 1.
         if self.transform:
             img = self.transform(img)
         if self.target_transform:
