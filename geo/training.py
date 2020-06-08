@@ -29,7 +29,7 @@ class LightningFcn(LightningModule):
         assert 0. <= validation_pct <= 1., 'invalid validation ratio'
         dataset = GeoSetFromFolder(
             root=self.hparams.data_path,
-            dataset='training',
+            dataset='train',
             transform=transforms.ToTensor(),
             target_transform=transforms.Lambda(lambda x: torch.tensor(x))
         )
