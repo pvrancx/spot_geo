@@ -64,7 +64,7 @@ class GeoSetFromFolder(VisionDataset):
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
         target = torch.zeros((img.height, img.width))
         if idx.size(1) > 0:
-            target[idx[:, 1], torch[:, 0]] = 1.
+            target[idx[:, 1], idx[:, 0]] = 1.
         if self.transform:
             img = self.transform(img)
         if self.target_transform:
