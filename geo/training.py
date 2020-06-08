@@ -49,7 +49,8 @@ class LightningFcn(LightningModule):
         self.loss_fn = nn.BCELoss()
 
     def forward(self, x):
-        return self.model(x)['out']
+        logits = self.model(x)['out']
+        return nn.functional.sigmoid(logits.squeeze(1))
 
     def configure_optimizers(self):
         optim = torch.optim.Adam(self.model.parameters(), lr=self.hparams.learning_rate)
