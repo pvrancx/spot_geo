@@ -34,7 +34,8 @@ class LightningFcn(LightningModule):
             target_transform=transforms.Lambda(lambda x: torch.tensor(x))
         )
         n_data = len(dataset)
-        lengths = [int((1. - validation_pct) * n_data), int(validation_pct * n_data)]
+        n_train_data = int((1. - validation_pct) * n_data)
+        lengths = [n_train_data, (n_data - n_train_data)]
         self.train_set, self.val_set = torch.utils.data.random_split(dataset, lengths)
 
     def forward(self, x):
@@ -71,7 +72,7 @@ class LightningFcn(LightningModule):
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': avg_loss, 'val_psnr': avg_psnr}
+        tensorboard_logs = {'val_loss': avg_loss}
         return {'val_loss': avg_loss,
                 'log': tensorboard_logs}
 
