@@ -1,4 +1,5 @@
 from argparse import Namespace
+from typing import Tuple
 
 import torch
 import torchvision
@@ -19,6 +20,7 @@ class LightningFcn(LightningModule):
             lr_decay: float = 0.999,
             data_path: str = '.',
             validation_pct: float = 0.1,
+            img_size: Tuple[int, int] = (224, 224),
             num_workers: int = 4
     ):
         super(LightningFcn, self).__init__()
@@ -28,6 +30,7 @@ class LightningFcn(LightningModule):
             lr_decay=lr_decay,
             data_path=data_path,
             validation_pct=validation_pct,
+            img_size=img_size,
             num_workers=num_workers
         )
         self.model = create_fcn_resnet()
@@ -36,6 +39,7 @@ class LightningFcn(LightningModule):
         dataset = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='train',
+            output_size=self.hparams.img_size,
             transform=transforms.ToTensor()
         )
         n_data = len(dataset)
@@ -108,7 +112,8 @@ class LightningFcn(LightningModule):
         test_set = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='test',
-            transform=transforms.ToTensor()
+            transform=transforms.ToTensor(),
+            output_size=(480, 640)
         )
         return DataLoader(
             test_set,

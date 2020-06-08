@@ -1,11 +1,14 @@
 import json
 import os
+import random
+from typing import Tuple
 
 import numpy as np
 import torch
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
+from torchvision.transforms.functional import crop
 
 
 def read_annotation_file(path, img_root):
@@ -30,6 +33,7 @@ class GeoSetFromFolder(VisionDataset):
             self,
             root: str,
             dataset: str,
+            output_size: Tuple[int, int],
             transform=None,
             target_transform=None
     ):
@@ -51,11 +55,31 @@ class GeoSetFromFolder(VisionDataset):
 
         self.dataset = dataset.lower()
         self.images = []
+        self.output_size = output_size
         for root, _, files in os.walk(img_root):
             for x in files:
                 if is_image_file(x):
                     self.images.append(os.path.join(root, x))
         self.labels = read_annotation_file(labelfile, img_root) if dataset == 'train' else {}
+
+    def _get_crop(self, img):
+        """Get parameters for ``crop`` for a random crop.
+
+        Args:
+            img (PIL Image): Image to be cropped.
+            output_size (tuple): Expected output size of the crop.
+
+        Returns:
+            tuple: params (i, j, h, w) to be passed to ``crop`` for random crop.
+        """
+        w, h = img.size
+        th, tw = self.output_size
+        if w == tw and h == th:
+            return 0, 0, h, w
+
+        i = random.randint(0, h - th)
+        j = random.randint(0, w - tw)
+        return i, j, th, tw
 
     def __getitem__(self, index):
         img_path = self.images[index]
@@ -63,6 +87,11 @@ class GeoSetFromFolder(VisionDataset):
         labels = self.labels[img_path] if self.dataset == 'train' else ()
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
         target = torch.zeros((img.height, img.width))
+
+        i, j, th, tw = self._get_crop(img)
+        img = crop(img, i, j, th, tw)
+        target = target[i:i+th, j:j+tw]
+
         if idx.size(1) > 0:
             target[idx[:, 1], idx[:, 0]] = 1.
         if self.transform:
