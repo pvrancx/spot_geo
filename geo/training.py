@@ -13,31 +13,12 @@ from geo.models import create_fcn_resnet
 
 
 class LightningFcn(LightningModule):
-    def __init__(
-            self,
-            learning_rate: float = 1e-4,
-            batch_size: int = 64,
-            lr_decay: float = 0.999,
-            class_weights: Optional[Tuple[float, float]] = None,
-            data_path: str = '.',
-            validation_pct: float = 0.1,
-            img_size: Tuple[int, int] = (224, 224),
-            num_workers: int = 4
-    ):
+    def __init__(self, hparams):
         super(LightningFcn, self).__init__()
-        self.hparams = Namespace(
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            lr_decay=lr_decay,
-            class_weights=class_weights,
-            data_path=data_path,
-            validation_pct=validation_pct,
-            img_size=img_size,
-            num_workers=num_workers
-        )
+        self.hparams = hparams
         self.model = create_fcn_resnet()
 
-        assert 0. <= validation_pct <= 1., 'invalid validation ratio'
+        assert 0. <= hparams.validation_pct <= 1., 'invalid validation ratio'
         dataset = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='train',
@@ -45,7 +26,7 @@ class LightningFcn(LightningModule):
             transform=transforms.ToTensor()
         )
         n_data = len(dataset)
-        n_train_data = int((1. - validation_pct) * n_data)
+        n_train_data = int((1. - hparams.validation_pct) * n_data)
         lengths = [n_train_data, (n_data - n_train_data)]
         self.train_set, self.val_set = torch.utils.data.random_split(dataset, lengths)
         self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(self.hparams.class_weights))
