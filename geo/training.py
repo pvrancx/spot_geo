@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Tuple
+from typing import Tuple, Optional
 
 import torch
 import torchvision
@@ -18,6 +18,7 @@ class LightningFcn(LightningModule):
             learning_rate: float = 1e-4,
             batch_size: int = 64,
             lr_decay: float = 0.999,
+            class_weights: Optional[Tuple[float, float]] = None,
             data_path: str = '.',
             validation_pct: float = 0.1,
             img_size: Tuple[int, int] = (224, 224),
@@ -28,6 +29,7 @@ class LightningFcn(LightningModule):
             learning_rate=learning_rate,
             batch_size=batch_size,
             lr_decay=lr_decay,
+            class_weights=class_weights,
             data_path=data_path,
             validation_pct=validation_pct,
             img_size=img_size,
@@ -46,11 +48,10 @@ class LightningFcn(LightningModule):
         n_train_data = int((1. - validation_pct) * n_data)
         lengths = [n_train_data, (n_data - n_train_data)]
         self.train_set, self.val_set = torch.utils.data.random_split(dataset, lengths)
-        self.loss_fn = nn.BCELoss()
+        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(self.hparams.class_weights))
 
     def forward(self, x):
-        logits = self.model(x)['out']
-        return torch.sigmoid(logits.squeeze(1))
+        return self.model(x)['out']
 
     def configure_optimizers(self):
         optim = torch.optim.Adam(self.model.parameters(), lr=self.hparams.learning_rate)
@@ -58,7 +59,7 @@ class LightningFcn(LightningModule):
         return [optim], [scheduler]
 
     def loss(self, y_hat, y):
-        return self.loss_fn(y_hat, y)
+        return self.loss_fn(y_hat, y.long())
 
     def training_step(self, batch, batch_idx, *args, **kwargs):
         x, y = batch
@@ -128,7 +129,7 @@ class LightningFcn(LightningModule):
             sample_input = sample_input.cuda()
         # log sampled images
         sample_imgs = self(sample_input)
-        grid = torchvision.utils.make_grid(sample_imgs.unsqueeze(1))
+        grid = torchvision.utils.make_grid(sample_imgs)
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]

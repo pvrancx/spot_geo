@@ -63,15 +63,6 @@ class GeoSetFromFolder(VisionDataset):
         self.labels = read_annotation_file(labelfile, img_root) if dataset == 'train' else {}
 
     def _get_crop(self, img):
-        """Get parameters for ``crop`` for a random crop.
-
-        Args:
-            img (PIL Image): Image to be cropped.
-            output_size (tuple): Expected output size of the crop.
-
-        Returns:
-            tuple: params (i, j, h, w) to be passed to ``crop`` for random crop.
-        """
         w, h = img.size
         th, tw = self.output_size
         if w == tw and h == th:
