@@ -8,8 +8,8 @@ import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import transforms
 
-from geo.dataset import GeoSetFromFolder
-from geo.models import create_fcn_resnet
+from dataset import GeoSetFromFolderCrop
+from models import create_fcn_resnet
 
 
 class LightningFcn(LightningModule):
@@ -19,7 +19,7 @@ class LightningFcn(LightningModule):
         self.model = create_fcn_resnet()
 
         assert 0. <= hparams.validation_pct <= 1., 'invalid validation ratio'
-        dataset = GeoSetFromFolder(
+        dataset = GeoSetFromFolderCrop(
             root=self.hparams.data_path,
             dataset='train',
             output_size=self.hparams.img_size,
@@ -81,7 +81,8 @@ class LightningFcn(LightningModule):
         return DataLoader(
             self.train_set,
             batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers
+            num_workers=self.hparams.num_workers,
+            shuffle=True
         )
 
     def val_dataloader(self):
@@ -92,7 +93,7 @@ class LightningFcn(LightningModule):
         )
 
     def test_dataloader(self):
-        test_set = GeoSetFromFolder(
+        test_set = GeoSetFromFolderCrop(
             root=self.hparams.data_path,
             dataset='test',
             transform=transforms.ToTensor(),
@@ -109,8 +110,9 @@ class LightningFcn(LightningModule):
         if self.on_gpu:
             sample_input = sample_input.cuda()
         # log sampled images
-        sample_imgs = self(sample_input)
-        grid = torchvision.utils.make_grid(sample_imgs)
+        # sample_imgs = self(sample_input)
+        # print(sample_imgs.shape, sample_input.shape)
+        grid = torchvision.utils.make_grid(sample_input)
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]

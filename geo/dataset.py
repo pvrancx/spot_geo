@@ -145,6 +145,7 @@ class GeoSetFromFolderCrop(VisionDataset):
             i = random.randint(0, h - th)
             j = random.randint(0, w - tw)
         return np.clip(i, 0, h-th) , np.clip(j, 0, w-tw), th, tw # clip values so crop doesn't results in small images when target is close to border.
+        # TODO: choose the target either at random or come up with a smarter way. Now it only gets the first target from the list.
 
     def __getitem__(self, index):
         img_path = self.images[index]
