@@ -81,7 +81,8 @@ class LightningFcn(LightningModule):
         return DataLoader(
             self.train_set,
             batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers
+            num_workers=self.hparams.num_workers,
+            shuffle=True
         )
 
     def val_dataloader(self):
