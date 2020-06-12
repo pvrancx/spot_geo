@@ -3,9 +3,9 @@ import os
 import random
 from typing import Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
 
@@ -73,7 +73,7 @@ class GeoSetFromFolder(VisionDataset):
 
     def __getitem__(self, index):
         img_path = self.images[index]
-        img = plt.imread(img_path)
+        img = np.array(Image.open(img_path).convert("L"))
         labels = self.labels[img_path] if self.dataset == 'train' else ()
 
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
