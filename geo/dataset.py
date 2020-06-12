@@ -66,7 +66,7 @@ class GeoSetFromFolder(VisionDataset):
         self.apply_filter = apply_filter
 
     def _get_crop(self, img):
-        w, h = img.size
+        w, h = img.shape
         th, tw = self.output_size
         if w == tw and h == th:
             return 0, 0, h, w
