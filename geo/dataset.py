@@ -82,7 +82,7 @@ class GeoSetFromFolder(VisionDataset):
         if self.apply_filter:
             img = wiener(img, [5, 5])
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
-        target = torch.zeros((img.height, img.width))
+        target = torch.zeros(img.shape)
         if idx.size(1) > 0:
             target[idx[:, 1], idx[:, 0]] = 1.
 
