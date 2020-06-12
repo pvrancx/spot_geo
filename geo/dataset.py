@@ -87,7 +87,7 @@ class GeoSetFromFolder(VisionDataset):
             target[idx[:, 1], idx[:, 0]] = 1.
 
         i, j, th, tw = self._get_crop(img)
-        img = crop(img, i, j, th, tw)
+        img = img[i:i+th, j:j+tw]
         target = target[i:i+th, j:j+tw]
 
         if self.transform:
