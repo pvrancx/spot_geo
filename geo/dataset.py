@@ -80,7 +80,7 @@ class GeoSetFromFolder(VisionDataset):
         img = plt.imread(img_path)
         labels = self.labels[img_path] if self.dataset == 'train' else ()
         if self.apply_filter:
-            img = wiener(img, [5, 5])
+            img = wiener(img, [5, 5]).astype(img.dtype)
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
         target = torch.zeros(img.shape)
         if idx.size(1) > 0:
