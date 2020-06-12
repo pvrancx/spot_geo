@@ -3,13 +3,11 @@ import os
 import random
 from typing import Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-from scipy.signal import wiener
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
-from torchvision.transforms.functional import crop
 
 
 def read_annotation_file(path, img_root):
@@ -37,7 +35,6 @@ class GeoSetFromFolder(VisionDataset):
             output_size: Tuple[int, int],
             transform=None,
             target_transform=None,
-            apply_filter=True
     ):
 
         super(GeoSetFromFolder, self).__init__(
@@ -63,7 +60,6 @@ class GeoSetFromFolder(VisionDataset):
                 if is_image_file(x):
                     self.images.append(os.path.join(root, x))
         self.labels = read_annotation_file(labelfile, img_root) if dataset == 'train' else {}
-        self.apply_filter = apply_filter
 
     def _get_crop(self, img):
         h, w = img.shape
@@ -79,8 +75,7 @@ class GeoSetFromFolder(VisionDataset):
         img_path = self.images[index]
         img = plt.imread(img_path)
         labels = self.labels[img_path] if self.dataset == 'train' else ()
-        if self.apply_filter:
-            img = wiener(img, [5, 5]).astype(img.dtype)
+
         idx = torch.from_numpy(np.atleast_2d(labels)).long()
         target = torch.zeros(img.shape)
         if idx.size(1) > 0:
