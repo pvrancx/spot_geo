@@ -3,12 +3,13 @@ from pytorch_lightning import Trainer
 from argparse import Namespace
 
 args = Namespace(
-    data_path='./data', 
+    data_path='./data',
+    crop_target=True,
     batch_size=256,
     img_size=(28,28), 
     num_workers=4,
     validation_pct = 0.1,
-    class_weights = (float(1),float(1)),
+    class_weights = (float(1),float(80000)),
     learning_rate=0.001,
     lr_decay= 0.95
 )

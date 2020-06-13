@@ -3,12 +3,13 @@ from typing import Tuple, Optional
 
 import torch
 import torchvision
+import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import transforms
 
-from dataset import GeoSetFromFolderCrop
+from dataset import GeoSetFromFolder
 from models import create_fcn_resnet
 
 
@@ -19,11 +20,12 @@ class LightningFcn(LightningModule):
         self.model = create_fcn_resnet()
 
         assert 0. <= hparams.validation_pct <= 1., 'invalid validation ratio'
-        dataset = GeoSetFromFolderCrop(
+        dataset = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='train',
             output_size=self.hparams.img_size,
-            transform=transforms.ToTensor()
+            transform=transforms.ToTensor(),
+            crop_target=self.hparams.crop_target
         )
         n_data = len(dataset)
         n_train_data = int((1. - hparams.validation_pct) * n_data)
@@ -106,13 +108,15 @@ class LightningFcn(LightningModule):
         )
 
     def on_epoch_end(self) -> None:
-        sample_input, _ = next(iter(self.trainer.val_dataloaders[-1]))
+        sample_input, sample_target = next(iter(self.trainer.val_dataloaders[-1]))
         if self.on_gpu:
             sample_input = sample_input.cuda()
+            sample_target = sample_target.cuda()
         # log sampled images
-        # sample_imgs = self(sample_input)
-        # print(sample_imgs.shape, sample_input.shape)
-        grid = torchvision.utils.make_grid(sample_input)
+        sample_imgs = self(sample_input)
+        pred_prob = F.softmax(sample_imgs, dim=1)[:, 1]
+        pred = pred_prob > 0.7
+        grid = torchvision.utils.make_grid(torch.cat((sample_input, sample_target.unsqueeze_(1),pred.type(torch.FloatTensor).unsqueeze_(1).cuda()), 0), normalize=True)
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
