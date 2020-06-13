@@ -95,7 +95,7 @@ class LightningFcn(LightningModule):
         )
 
     def test_dataloader(self):
-        test_set = GeoSetFromFolderCrop(
+        test_set = GeoSetFromFolder(
             root=self.hparams.data_path,
             dataset='test',
             transform=transforms.ToTensor(),
@@ -103,7 +103,7 @@ class LightningFcn(LightningModule):
         )
         return DataLoader(
             test_set,
-            batch_size=self.hparams.batch_size,
+            batch_size=32,
             num_workers=self.hparams.num_workers
         )
 
