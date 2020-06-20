@@ -3,16 +3,18 @@ import dataset
 import os
 import argparse
 import torch
+import numpy as np
 from skimage import measure
 from collections import defaultdict
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import transforms
 from dataset import GeoSetFromFolder
+import torch.nn.functional as F
 
 parser = argparse.ArgumentParser()
 parser.add_argument("model", type=str, help="saved model")
 parser.add_argument("--dataset", type=str, default="./data", help="dataset")
-parser.add_argument("--batch_size", type=int, default=32, help="batch size")
+parser.add_argument("--batch_size", type=int, default=8, help="batch size")
 parser.add_argument("--nocuda", action='store_true', help="no cuda used")
 parser.add_argument("--nworkers", type=int, default=4, help="number of workers")
 parser.add_argument("--output_file", type=str, default="pred.json", help="output file")
@@ -22,13 +24,22 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f'Testing on {device}')
 
 def predict(net, loader):
+
     net.eval()
     with torch.no_grad():
-        for x, _ in loader:
-            x = x.to(device)
-            output = net(x)
-    
-    print("Done")
+        # for x, _ in loader:
+        #     x = x.to(device)
+        #     output = net(x)
+        x, _ = next(iter(loader))
+        x = x.to(device)
+        output = net(x)
+        pred_prob = F.softmax(output, dim=1)[:, 1]
+        pred = pred_prob > 0.1
+        
+        for mask in pred:
+            centroids, sizes = extract_centroids(mask.cpu(), 0)
+            small_centroids=filter_large_objects(centroids,sizes,2)
+            print(len(small_centroids.keys()))
     return
 
 def extract_centroids(pred, bg):

@@ -25,7 +25,13 @@ def read_annotation_file(path, img_root):
         annotation_dict[img_path] = tuple(annotation['object_coords'])
     return annotation_dict
 
-
+def get_mask(labels, shape: Tuple[int, int]):
+    mask = np.zeros((shape[0], shape[1]), dtype=np.float32)
+    if labels.size>0:
+        labels = labels+0.5
+        labels = labels.astype(np.uint16)
+        mask[labels[:,1], labels[:,0]] = 1
+    return mask
 
 class GeoSetFromFolder(VisionDataset):
     """
@@ -88,14 +94,18 @@ class GeoSetFromFolder(VisionDataset):
         img_path = self.images[index]
         img = Image.open(img_path).convert('L')
         labels = self.labels[img_path] if self.dataset == 'train' else ()
-        idx = torch.from_numpy(np.atleast_2d(labels)).long()
-        target = torch.zeros((img.height, img.width))
-        if idx.size(1) > 0:
-            target[idx[:, 1], idx[:, 0]] = 1.
+        idx = np.atleast_2d(labels)
+        # idx = torch.from_numpy(np.atleast_2d(labels)).long()
+        # print(idx)
+        # target = torch.zeros((img.height, img.width))
+        # if idx.size(1) > 0:
+        #     target[idx[:, 1], idx[:, 0]] = 1.
+        target = get_mask(idx, (img.height, img.width))
 
         i, j, th, tw = self._get_crop(img, labels)
         img = crop(img, i, j, th, tw)
         target = target[i:i+th, j:j+tw]
+        
         
         if self.transform:
             img = self.transform(img)
@@ -118,13 +128,13 @@ if __name__ == "__main__":
             dataset='train',
             output_size=(16,16),
             transform = transforms.Compose([transforms.ToTensor()]),
+            target_transform = transforms.Compose([transforms.ToTensor()]),
             crop_target = True
         )
     
     
-    train_load = DataLoader(dataset, batch_size=32,shuffle = True)
+    train_load = DataLoader(dataset, batch_size=16,shuffle = True)
     for i in range(10):
         img, target = next(iter(train_load))
-        print(img)
-    vutils.save_image(torch.cat((img,target.unsqueeze_(1)), 0), 'batch.png', normalize=True)
-    
+        # print(img.type())
+    vutils.save_image(torch.cat((img,target), 0), 'batch.png', normalize=True)
